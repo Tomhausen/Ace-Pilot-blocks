@@ -5,6 +5,7 @@ namespace SpriteKind {
 sprites.onOverlap(SpriteKind.player_projectile, SpriteKind.Enemy, function (proj, enemy) {
     info.changeScoreBy(100)
     enemy.destroy()
+    enemy_count += -1
 })
 function hit_edge (sprite: Sprite) {
     transformSprites.changeRotation(sprite, 180)
@@ -56,6 +57,17 @@ function player_controls () {
     }
     calculate_velocity(player_plane, player_plane, player_speed)
 }
+function new_wave () {
+    for (let index = 0; index < wave; index++) {
+        spawn_enemy()
+    }
+    message = textsprite.create("NEW WAVE")
+    message.setOutline(1, 15)
+    message.setFlag(SpriteFlag.RelativeToCamera, true)
+    message.setPosition(80, 40)
+    message.lifespan = 3000
+    wave += 1
+}
 function get_dir_to_player (enemy: Sprite) {
     target_dir = spriteutils.angleFrom(enemy, player_plane)
     target_dir = spriteutils.radiansToDegrees(target_dir) + 90
@@ -74,6 +86,7 @@ function spawn_enemy () {
     sprites.setDataNumber(enemy, "turn", 0)
     place_sprite(enemy)
     transformSprites.rotateSprite(enemy, get_dir_to_player(enemy))
+    enemy_count += 1
 }
 function place_sprite (sprite: Sprite) {
     col = randint(1, grid.numColumns())
@@ -87,8 +100,10 @@ let row = 0
 let col = 0
 let enemy: Sprite = null
 let target_dir = 0
+let message: TextSprite = null
 let proj: Sprite = null
 let direction = 0
+let wave = 0
 let player_plane: Sprite = null
 let enemy_turn = 0
 let enemy_speed = 0
@@ -105,12 +120,20 @@ transformSprites.rotateSprite(player_plane, 90)
 scene.setBackgroundColor(9)
 tiles.setCurrentTilemap(tilemap`level`)
 scene.cameraFollowSprite(player_plane)
+let enemy_count = 0
+wave = 1
+let enemy_count_sprite = textsprite.create("")
+enemy_count_sprite.setOutline(1, 15)
+enemy_count_sprite.setFlag(SpriteFlag.RelativeToCamera, true)
+enemy_count_sprite.bottom = 120
+enemy_count_sprite.left = 0
 game.onUpdate(function () {
     player_controls()
+    if (enemy_count < 1) {
+        new_wave()
+    }
+    enemy_count_sprite.setText("Enemy count: " + enemy_count)
     for (let value of sprites.allOfKind(SpriteKind.Enemy)) {
         enemy_behaviour(value)
     }
-})
-game.onUpdateInterval(4000, function () {
-    spawn_enemy()
 })
