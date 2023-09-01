@@ -1,6 +1,7 @@
 namespace SpriteKind {
     export const player_projectile = SpriteKind.create()
     export const enemy_projectile = SpriteKind.create()
+    export const effect = SpriteKind.create()
 }
 sprites.onOverlap(SpriteKind.player_projectile, SpriteKind.Enemy, function (proj, enemy) {
     info.changeScoreBy(100)
@@ -44,6 +45,11 @@ function enemy_behaviour (enemy: Sprite) {
     calculate_velocity(enemy, enemy, enemy_speed)
     if (randint(1, 150) == 1) {
         fire(enemy, projectile_speed - 50, SpriteKind.enemy_projectile)
+    }
+}
+function destroy_smoke (smoke: Sprite) {
+    for (let index = 0; index < info.life() * 5; index++) {
+        smoke.image.setPixel(randint(0, 15), randint(0, 15), 0)
     }
 }
 scene.onHitWall(SpriteKind.Enemy, function (sprite, location) {
@@ -96,6 +102,7 @@ function place_sprite (sprite: Sprite) {
         place_sprite(sprite)
     }
 }
+let smoke: Sprite = null
 let row = 0
 let col = 0
 let enemy: Sprite = null
@@ -135,5 +142,17 @@ game.onUpdate(function () {
     enemy_count_sprite.setText("Enemy count: " + enemy_count)
     for (let value of sprites.allOfKind(SpriteKind.Enemy)) {
         enemy_behaviour(value)
+    }
+    for (let value of sprites.allOfKind(SpriteKind.effect)) {
+        destroy_smoke(value)
+    }
+})
+game.onUpdateInterval(200, function () {
+    if (info.life() < 3) {
+        smoke = sprites.create(assets.image`smoke`, SpriteKind.effect)
+        smoke.setPosition(player_plane.x, player_plane.y)
+        smoke.z = -5
+        smoke.scale = 1 / info.life()
+        smoke.lifespan = 3000 / info.life()
     }
 })
